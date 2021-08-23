@@ -9,8 +9,8 @@ namespace ConnectFour
 {
     public class Sprite
     {
-        Vector2 Position;
-        float Radius;
+        public Vector2 Position;
+        public float Radius;
         
 
         public Sprite (Vector2 position, float radius)
@@ -20,13 +20,21 @@ namespace ConnectFour
             
         }
 
-        public void FillCircle(SpriteBatch spriteBatch)
+        public void FillCircle(SpriteBatch spriteBatch, bool fill)
         {
             float radius = Radius;
             while (radius > 0)
             {
-                spriteBatch.DrawCircle(Position, radius, 32, Color.White);
-                radius--;
+                if (fill == false)
+                {
+                    spriteBatch.DrawCircle(Position, radius, 32, Color.White);
+                    radius--;
+                }
+                if (fill == true)
+                {
+                    spriteBatch.DrawCircle(Position, radius, 32, Color.Red);
+                    radius--;
+                }
             }
        //     spriteBatch.DrawRectangle(Hitbox, Color.Red);
         }

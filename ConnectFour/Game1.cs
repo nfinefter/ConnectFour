@@ -61,8 +61,19 @@ namespace ConnectFour
 
             // TODO: Add your update logic here
 
+            MouseState ms = new MouseState();
 
+            for (int a = 0; a < rows; a++)
+            {
+                for (int i = 0; i < columns; i++)
+                {
+                    if (ms.LeftButton == ButtonState.Pressed && cells[a, i].Hitbox.Intersects(new Vector2(ms.Position.X, ms.Position.Y)))
+                    {
+                        //fix this so you can fill in the circles
+                    }
+                }
 
+            }
 
             base.Update(gameTime);
         }
@@ -79,17 +90,15 @@ namespace ConnectFour
 
             //_spriteBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), 30, 32, Color.White);
 
-
-
-
             for (int a = 0; a < rows; a++)
             {
                 for (int i = 0; i < columns; i++)
                 {
-                    cells[a, i].FillCircle(spriteBatch);
+                    cells[a, i].FillCircle(spriteBatch, false);
                 }
 
             }
+            
             spriteBatch.End();
 
             base.Draw(gameTime);
