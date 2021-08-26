@@ -12,8 +12,11 @@ namespace ConnectFour
         public int rows = 6;
         public int columns = 7;
         int radius = 30;
-        Sprite[,] cells;
+        Cell[,] cells;
         Vector2 center;
+        Player player = Player.Red;
+        int[] columnHeight = new int[7];
+        bool pressed = false;
 
         public Game1()
         {
@@ -21,6 +24,79 @@ namespace ConnectFour
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
+
+        public bool CheckRow(int Row)
+        {
+            int InRowCount = 0;
+            for (int col = 0; col < columns; col++)
+            {
+
+                if (cells[Row, col].Player == player)
+                {
+                    InRowCount++;
+                    if (InRowCount >= 4)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    InRowCount = 0;
+                }
+            }
+            return false;
+
+        }
+        public bool CheckCol(int Col)
+        {
+            int InColCount = 0;
+            for (int row = 0; row < columns; row++)
+            {
+
+                if (cells[row, Col].Player == player)
+                {
+                    InColCount++;
+                    if (InColCount >= 4)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    InColCount = 0;
+                }
+            }
+            return false;
+        }
+        public bool CheckDiag(int Row, int Col)
+        {
+            int InDiagCount = 0;
+
+            // figure out the diagonal logic (should only be one for loop)
+
+            for (int row = 0; row < columns; row++)
+            {
+                for (int col = 0; col < rows; col++)
+                {
+                    if (cells[Row, Col].Player == player)
+                    {
+                        InDiagCount++;
+                        if (InDiagCount >= 4)
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        InDiagCount = 0;
+                    }
+                }
+                
+            }
+
+            return false;
+        }
+
 
         protected override void Initialize()
         {
@@ -31,13 +107,13 @@ namespace ConnectFour
             _graphics.ApplyChanges();
 
             center = new Vector2(radius + radius / 2, radius + radius / 2);
-            cells = new Sprite[rows, columns];
+            cells = new Cell[rows, columns];
 
             for (int i = 0; i < cells.GetLength(0); i++)
             {
                 for (int a = 0; a < cells.GetLength(1); a++)
                 {
-                    cells[i, a] = new Sprite(center, radius);
+                    cells[i, a] = new Cell(radius, center, Player.None);
                     center.X += 80;
                 }
                 center.X = radius + radius / 2;
@@ -61,19 +137,45 @@ namespace ConnectFour
 
             // TODO: Add your update logic here
 
-            MouseState ms = new MouseState();
+            MouseState ms = Mouse.GetState();
 
-            for (int a = 0; a < rows; a++)
+            if (!pressed && ms.LeftButton == ButtonState.Pressed)
             {
-                for (int i = 0; i < columns; i++)
+                pressed = true;
+            }
+            else if(pressed && ms.LeftButton == ButtonState.Released)
+            {
+                for (int row = 0; row < rows; row++)
                 {
-                    if (ms.LeftButton == ButtonState.Pressed && cells[a, i].Hitbox.Intersects(new Vector2(ms.Position.X, ms.Position.Y)))
+                    for (int col = 0; col < columns; col++)
                     {
-                        //fix this so you can fill in the circles
+                        if (cells[row, col].Hitbox.Contains(ms.Position))
+                        {
+                            if (columnHeight[col] < 6)
+                            {
+                                cells[rows - 1 - columnHeight[col], col].Player = player;
+                            }
+
+                            columnHeight[col]++;
+
+                            if (player == Player.Red)
+                            {
+                                player = Player.Yellow;
+                            }
+                            else if (player == Player.Yellow)
+                            {
+                                player = Player.Red;
+                            }
+
+                            break;
+                        }
                     }
                 }
 
+                pressed = false;
             }
+
+            
 
             base.Update(gameTime);
         }
@@ -82,7 +184,7 @@ namespace ConnectFour
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Yellow);
+            GraphicsDevice.Clear(Color.Black);
 
             // TODO: Add your drawing code here
 
@@ -94,11 +196,11 @@ namespace ConnectFour
             {
                 for (int i = 0; i < columns; i++)
                 {
-                    cells[a, i].FillCircle(spriteBatch, false);
+                    cells[a, i].Draw(spriteBatch);
                 }
 
             }
-            
+
             spriteBatch.End();
 
             base.Draw(gameTime);
