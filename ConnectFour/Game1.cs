@@ -50,7 +50,7 @@ namespace ConnectFour
         public bool CheckCol(int Col)
         {
             int InColCount = 0;
-            for (int row = 0; row < columns; row++)
+            for (int row = 0; row < rows; row++)
             {
 
                 if (cells[row, Col].Player == player)
@@ -68,33 +68,95 @@ namespace ConnectFour
             }
             return false;
         }
-        public bool CheckDiag(int Row, int Col)
+        public bool CheckDiagTopLeft(int Row, int Col)
         {
             int InDiagCount = 0;
+            // if the row is bigger, column will start as 0, if the col is bigger, row will start at 0
+
+            int startRow;
+            int startCol;
+
+            if (Row > Col)
+            {
+                startCol = 0;
+                startRow = Row - Col;
+
+            }
+            else
+            {
+                startRow = 0;
+                startCol = Col - Row;
+
+            }
+
+
 
             // figure out the diagonal logic (should only be one for loop)
 
-            for (int row = 0; row < columns; row++)
+            while (startRow < rows && startCol < columns)
             {
-                for (int col = 0; col < rows; col++)
+                if (cells[startRow, startCol].Player == player)
                 {
-                    if (cells[Row, Col].Player == player)
+                    InDiagCount++;
+                    if (InDiagCount >= 4)
                     {
-                        InDiagCount++;
-                        if (InDiagCount >= 4)
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        InDiagCount = 0;
+                        return true;
                     }
                 }
-                
+                else
+                {
+                    InDiagCount = 0;
+                }
+                startRow++;
+                startCol++;
             }
-
             return false;
+        }
+        public bool CheckDiagTopRight(int Row, int Col)
+        {
+            int InDiagCount = 0;
+            // if the row is bigger, column will start as 0, if the col is bigger, row will start at 0
+
+            int startRow;
+            int startCol;
+
+            if (Row >= Col)
+            {
+                startRow = 0;
+                startCol = Col + Row;
+
+            }
+            else
+            {
+                int steps = columns - Col;
+                startRow = Row - steps;
+                startCol = columns;
+
+            }
+            // figure out the diagonal logic (should only be one for loop)
+
+            while (startRow < rows && startCol > 0 && startCol < columns)
+            {
+                if (cells[startRow, startCol].Player == player)
+                {
+                    InDiagCount++;
+                    if (InDiagCount >= 4)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    InDiagCount = 0;
+                }
+                startRow++;
+                startCol--;
+            }
+            return false;
+        }
+        public bool CheckWin(int Row, int Col)
+        {
+            return CheckRow(Row) || CheckCol(Col) || CheckDiagTopRight(Row, Col) || CheckDiagTopLeft(Row, Col);
         }
 
 
@@ -143,7 +205,7 @@ namespace ConnectFour
             {
                 pressed = true;
             }
-            else if(pressed && ms.LeftButton == ButtonState.Released)
+            else if (pressed && ms.LeftButton == ButtonState.Released)
             {
                 for (int row = 0; row < rows; row++)
                 {
@@ -151,20 +213,28 @@ namespace ConnectFour
                     {
                         if (cells[row, col].Hitbox.Contains(ms.Position))
                         {
-                            if (columnHeight[col] < 6)
+                            if (columnHeight[col] < rows)
                             {
-                                cells[rows - 1 - columnHeight[col], col].Player = player;
-                            }
+                                int placementRow = rows - 1 - columnHeight[col];
+                                cells[placementRow, col].Player = player;
 
-                            columnHeight[col]++;
 
-                            if (player == Player.Red)
-                            {
-                                player = Player.Yellow;
-                            }
-                            else if (player == Player.Yellow)
-                            {
-                                player = Player.Red;
+                                columnHeight[col]++;
+
+                                // fix top right diagonal
+                                if (CheckWin(placementRow, col))
+                                {
+
+                                }
+
+                                if (player == Player.Red)
+                                {
+                                    player = Player.Yellow;
+                                }
+                                else if (player == Player.Yellow)
+                                {
+                                    player = Player.Red;
+                                }
                             }
 
                             break;
@@ -174,8 +244,8 @@ namespace ConnectFour
 
                 pressed = false;
             }
-
             
+
 
             base.Update(gameTime);
         }
@@ -207,4 +277,5 @@ namespace ConnectFour
 
         }
     }
+
 }
