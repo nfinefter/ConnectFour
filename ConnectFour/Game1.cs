@@ -17,12 +17,29 @@ namespace ConnectFour
         Player player = Player.Red;
         int[] columnHeight = new int[7];
         bool pressed = false;
+        bool GameOver = false;
 
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+        }
+        public void Reset()
+        {
+            player = Player.Red;
+            GameOver = false;
+            for (int i = 0; i < columnHeight.Length; i++)
+            {
+                columnHeight[i] = 0;
+            }
+            for (int i = 0; i < cells.GetLength(0); i++)
+            {
+                for (int a = 0; a < cells.GetLength(1); a++)
+                {
+                    cells[i, a].Player = Player.None;
+                }
+            }
         }
 
         public bool CheckRow(int Row)
@@ -120,7 +137,7 @@ namespace ConnectFour
             int startRow;
             int startCol;
 
-            if (Row >= Col)
+            if (Row + Col < columns - 1)
             {
                 startRow = 0;
                 startCol = Col + Row;
@@ -128,14 +145,14 @@ namespace ConnectFour
             }
             else
             {
-                int steps = columns - Col;
+                int steps = (columns - 1) - Col;
                 startRow = Row - steps;
-                startCol = columns;
+                startCol = columns - 1;
 
             }
             // figure out the diagonal logic (should only be one for loop)
 
-            while (startRow < rows && startCol > 0 && startCol < columns)
+            while (startRow < rows && startCol >= 0 && startCol < columns)
             {
                 if (cells[startRow, startCol].Player == player)
                 {
@@ -192,7 +209,7 @@ namespace ConnectFour
             // TODO: use this.Content to load your game content here
         }
 
-        protected override void Update(GameTime gameTime)
+        protected override async void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
@@ -201,12 +218,18 @@ namespace ConnectFour
 
             MouseState ms = Mouse.GetState();
 
-            if (!pressed && ms.LeftButton == ButtonState.Pressed)
+            if(GameOver)
+            {
+
+            }
+            else if (!pressed && ms.LeftButton == ButtonState.Pressed)
             {
                 pressed = true;
             }
             else if (pressed && ms.LeftButton == ButtonState.Released)
             {
+                pressed = false;
+
                 for (int row = 0; row < rows; row++)
                 {
                     for (int col = 0; col < columns; col++)
@@ -222,9 +245,20 @@ namespace ConnectFour
                                 columnHeight[col]++;
 
                                 // fix top right diagonal
+                                int? index;
                                 if (CheckWin(placementRow, col))
                                 {
-
+                                    GameOver = true;
+                                    index = await MessageBox.Show($"{player} Wins!", "Play Again?", new string[] { "Yes", "No" });
+                                    if (index == 1)
+                                    {
+                                        Exit();
+                                    }
+                                    else
+                                    {
+                                        Reset();
+                                        return;
+                                    }
                                 }
 
                                 if (player == Player.Red)
@@ -241,8 +275,6 @@ namespace ConnectFour
                         }
                     }
                 }
-
-                pressed = false;
             }
             
 
@@ -262,15 +294,26 @@ namespace ConnectFour
 
             //_spriteBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), 30, 32, Color.White);
 
-            for (int a = 0; a < rows; a++)
+            if (!GameOver)
             {
-                for (int i = 0; i < columns; i++)
+                for (int a = 0; a < rows; a++)
                 {
-                    cells[a, i].Draw(spriteBatch);
+                    for (int i = 0; i < columns; i++)
+                    {
+                        cells[a, i].Draw(spriteBatch);
+                    }
+
                 }
-
             }
-
+            int width = 40;
+            if (player == Player.Red)
+            {
+                spriteBatch.FillRectangle(GraphicsDevice.Viewport.Width - width, 0, width, GraphicsDevice.Viewport.Height, Color.Red);
+            }
+            else if (player == Player.Yellow)
+            {
+                spriteBatch.FillRectangle(GraphicsDevice.Viewport.Width - width, 0, width, GraphicsDevice.Viewport.Height, Color.Yellow);
+            }
             spriteBatch.End();
 
             base.Draw(gameTime);
